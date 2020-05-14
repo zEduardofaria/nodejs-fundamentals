@@ -3,8 +3,8 @@ import Transaction from '../models/Transaction';
 
 interface Request {
   title: string;
-  type: string;
   value: number;
+  type: 'income' | 'outcome';
 }
 
 class CreateTransactionService {
@@ -14,7 +14,21 @@ class CreateTransactionService {
     this.transactionsRepository = transactionsRepository;
   }
 
-  public execute({ title, value, type }: Request): Transaction {}
+  public execute({ title, value, type }: Request): Transaction {
+    const balance = this.transactionsRepository.getBalance();
+
+    if (type === 'outcome' && balance.total < value) {
+      throw new Error('Invalid value');
+    }
+
+    const transaction = this.transactionsRepository.create({
+      title,
+      value,
+      type,
+    });
+
+    return transaction;
+  }
 }
 
 export default CreateTransactionService;
